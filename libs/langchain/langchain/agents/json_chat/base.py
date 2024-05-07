@@ -8,7 +8,7 @@ from langchain_core.tools import BaseTool
 from langchain.agents.format_scratchpad import format_log_to_messages
 from langchain.agents.json_chat.prompt import TEMPLATE_TOOL_RESPONSE
 from langchain.agents.output_parsers import JSONAgentOutputParser
-from langchain.tools.render import ToolsRenderer, render_text_description
+from langchain.tools.render import ToolsRenderer, render_text_description_and_args
 
 
 def create_json_chat_agent(
@@ -16,7 +16,7 @@ def create_json_chat_agent(
     tools: Sequence[BaseTool],
     prompt: ChatPromptTemplate,
     stop_sequence: Union[bool, List[str]] = True,
-    tools_renderer: ToolsRenderer = render_text_description,
+    tools_renderer: ToolsRenderer = render_text_description_and_args,
     template_tool_response: str = TEMPLATE_TOOL_RESPONSE,
 ) -> Runnable:
     """Create an agent that uses JSON to format its logic, build for Chat Models.
@@ -26,14 +26,14 @@ def create_json_chat_agent(
         tools: Tools this agent has access to.
         prompt: The prompt to use. See Prompt section below for more.
         stop_sequence: bool or list of str.
-            If True, adds a stop token of "Observation:" to avoid hallucinates. 
+            If True, adds a stop token of "\nObservation:" to avoid hallucinations. 
             If False, does not add a stop token.
             If a list of str, uses the provided list as the stop tokens.
             
             Default is True. You may to set this to False if the LLM you are using
             does not support stop sequences.
         tools_renderer: This controls how the tools are converted into a string and
-            then passed into the LLM. Default is `render_text_description`.
+            then passed into the LLM. Default is `render_text_description_and_args`.
         template_tool_response: Template prompt that uses the tool response (observation)
             to make the LLM generate the next action to take.
 
@@ -170,7 +170,7 @@ def create_json_chat_agent(
         tool_names=", ".join([t.name for t in tools]),
     )
     if stop_sequence:
-        stop = ["\nObservation"] if stop_sequence is True else stop_sequence
+        stop = ["\nObservation:"] if stop_sequence is True else stop_sequence
         llm_to_use = llm.bind(stop=stop)
     else:
         llm_to_use = llm
