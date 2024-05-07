@@ -40,7 +40,7 @@ class StructuredChatAgent(Agent):
     @property
     def observation_prefix(self) -> str:
         """Prefix to append the observation with."""
-        return "Observation: "
+        return "\nObservation: "
 
     @property
     def llm_prefix(self) -> str:
@@ -74,7 +74,7 @@ class StructuredChatAgent(Agent):
 
     @property
     def _stop(self) -> List[str]:
-        return ["Observation:"]
+        return ["\nObservation:"]
 
     @classmethod
     def create_prompt(
@@ -165,14 +165,14 @@ def create_structured_chat_agent(
         tools: Tools this agent has access to.
         prompt: The prompt to use. See Prompt section below for more.
         stop_sequence: bool or list of str.
-            If True, adds a stop token of "Observation:" to avoid hallucinates.
+            If True, adds a stop token of "\nObservation:" to avoid hallucinations.
             If False, does not add a stop token.
             If a list of str, uses the provided list as the stop tokens.
 
             Default is True. You may to set this to False if the LLM you are using
             does not support stop sequences.
         tools_renderer: This controls how the tools are converted into a string and
-            then passed into the LLM. Default is `render_text_description`.
+            then passed into the LLM. Default is `render_text_description_and_args`.
 
     Returns:
         A Runnable sequence representing an agent. It takes as input all the same input
@@ -255,8 +255,13 @@ def create_structured_chat_agent(
               "action": "Final Answer",
               "action_input": "Final response to human"
             }}
+            ```
 
-            Begin! Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary. Respond directly if appropriate. Format is Action:```$JSON_BLOB```then Observation'''
+            Begin! Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary. Respond directly if appropriate. Format is 
+            Action:
+            ```
+            $JSON_BLOB
+            ```'''
 
             human = '''{input}
 
@@ -283,7 +288,7 @@ def create_structured_chat_agent(
         tool_names=", ".join([t.name for t in tools]),
     )
     if stop_sequence:
-        stop = ["\nObservation"] if stop_sequence is True else stop_sequence
+        stop = ["\nObservation:"] if stop_sequence is True else stop_sequence
         llm_with_stop = llm.bind(stop=stop)
     else:
         llm_with_stop = llm
